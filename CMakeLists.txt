@@ -22,3 +22,8 @@ add_executable(SMNBody main.cpp
         src/GravityFunction.cpp
         include/GravityFunction.h
 )
+
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(SMNBody PUBLIC OpenMP::OpenMP_CXX)
+endif()
