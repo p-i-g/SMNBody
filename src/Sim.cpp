@@ -15,7 +15,7 @@ Sim::Sim(const std::string& params_fname) {
         std::cerr << "Failed to load parameters file: " << params_fname << std::endl;
         return;
     }
-    // std::cout << "Successfullly loaded parameters" << std::endl;
+    std::cout << "Successfullly loaded parameters: " << params_fname <<  std::endl;
 
     number_of_particles = params["number_of_particles"];
     opening_angle = params["opening_angle"];
@@ -109,13 +109,10 @@ void Sim::initialize_particles() {
 
 void Sim::one_step() {
     root = new TreeNode(nullptr, domain_size, Vector2(0, 0));
-    auto t1 = std::chrono::high_resolution_clock::now();
     // add particles to the tree
     for (int i = 0; i < number_of_particles; i++) {
         root->insert_particle(&particles[i], 0);
     }
-    auto t2 = std::chrono::high_resolution_clock::now();
-    std::cout << "Insert time: " << std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() << std::endl;
     for (int i = 0; i < number_of_particles; i++) {
         // auto inner_t0 = std::chrono::high_resolution_clock::now();
         Vector2 f = root->calculate_force(&particles[i], opening_angle, g, particle_radius);
@@ -133,15 +130,11 @@ void Sim::one_step() {
         // std::cout << particles[i].current_node->center.x << ", " << particles[i].current_node->center.y << std::endl;
         // std::cout << "Timestep time: " << std::chrono::duration_cast<std::chrono::nanoseconds>(inner_t2 - inner_t1).count() << std::endl;
     }
-    auto t3 = std::chrono::high_resolution_clock::now();
-    std::cout << "Force and timestep time: " << std::chrono::duration_cast<std::chrono::microseconds>(t3 - t2).count() << std::endl;
     for (int i = 0; i < number_of_particles; i++) {
         if (particles[i].current_node != nullptr) {
             particles[i].current_node->resolve_collisions(&particles[i], particle_radius);
         }
     }
-    auto t4 = std::chrono::high_resolution_clock::now();
-    std::cout << "Collision time: " << std::chrono::duration_cast<std::chrono::microseconds>(t4 - t3).count() << std::endl;
 
     delete root;
 }
@@ -161,9 +154,9 @@ void Sim::step_one_particle_terminal_velocity(Particle *particle, Vector2 const 
 
 void Sim::run() {
     int const total_steps = static_cast<int>(total_time / timestep);
-    std::cout << total_steps << std::endl;
+    // std::cout << total_steps << std::endl;
     for (int i = 0; i < total_steps; i++) {
-        std::cout << "Step: " << i << std::endl;
+        // std::cout << "Step: " << i << std::endl;
         one_step();
 
         if (i % save_interval == 0) {

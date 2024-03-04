@@ -22,12 +22,12 @@ void Particle::resolve_collision(const Particle *other, sm_float const particle_
     // calculate the velocity for inelastic collision. its just an average of the 2 velocities
     velocity = (velocity + other->velocity) / 2;
 
-    if (position.x > 10 || position.x < -10 || position.y > 10 || position.y < -10 ||
-        velocity.x > 10 || velocity.x < -10 || velocity.y > 10 || velocity.y < -10) {
-        std::cout << "New position: " << position.x << ", " << position.y << std::endl;
-        std::cout << "Old position: " << prev_position.x << ", " << prev_position.y << std::endl;
-        std::cout << "New velocity: " << velocity.x << ", " << velocity.y << std::endl;
-        std::cout << "Old velocity: " << prev_velocity.x << ", " << prev_velocity.y << std::endl;
-        std::cout << "Other velocity: " << other->velocity.x << ", " << other->velocity.y << std::endl;
-    }
+    // if (position.x > 10 || position.x < -10 || position.y > 10 || position.y < -10 ||
+    //     velocity.x > 10 || velocity.x < -10 || velocity.y > 10 || velocity.y < -10) {
+    //     std::cout << "New position: " << position.x << ", " << position.y << std::endl;
+    //     std::cout << "Old position: " << prev_position.x << ", " << prev_position.y << std::endl;
+    //     std::cout << "New velocity: " << velocity.x << ", " << velocity.y << std::endl;
+    //     std::cout << "Old velocity: " << prev_velocity.x << ", " << prev_velocity.y << std::endl;
+    //     std::cout << "Other velocity: " << other->velocity.x << ", " << other->velocity.y << std::endl;
+    // }
 }
