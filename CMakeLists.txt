@@ -9,8 +9,6 @@ include_directories(include)
 add_executable(SMNBody main.cpp
         src/TreeNode.cpp
         include/TreeNode.h
-        include/constants.h
-        include/constants.h
         src/Particle.cpp
         include/Particle.h
         include/types.h

@@ -7,15 +7,17 @@
 #include <iostream>
 
 #include "GravityFunction.h"
+#include "Sim.h"
 
-TreeNode::TreeNode(TreeNode *parent, sm_float const size, Vector2 const center) : parent(parent), size(size), center(center), cm(center){}
+TreeNode::TreeNode(TreeNode *parent, sm_float const size, Vector2 const center, Sim* sim) :
+parent(parent), size(size), center(center), cm(center), sim(sim) {}
 
 void TreeNode::create_children() {
     if (!has_children) {
-        top_left = new TreeNode(this, size / 2, center + Vector2(-size / 4, size / 4));
-        top_right = new TreeNode(this, size / 2, center + Vector2(size / 4, size / 4));
-        bottom_left = new TreeNode(this, size / 2, center + Vector2(-size / 4, -size / 4));
-        bottom_right = new TreeNode(this, size / 2, center + Vector2(size / 4, -size / 4));
+        top_left = new TreeNode(this, size / 2, center + Vector2(-size / 4, size / 4), sim);
+        top_right = new TreeNode(this, size / 2, center + Vector2(size / 4, size / 4), sim);
+        bottom_left = new TreeNode(this, size / 2, center + Vector2(-size / 4, -size / 4), sim);
+        bottom_right = new TreeNode(this, size / 2, center + Vector2(size / 4, -size / 4), sim);
         has_children = true;
     }
     // std::cout << top_left->center.x << ", " << top_left->center.y << std::endl;
@@ -41,6 +43,9 @@ void TreeNode::insert_particle(Particle *particle, int depth) { // NOLINT it's m
 
     if (num_particles > 0) {
         if (!has_children) {
+            if (this->particle->position.x == particle->position.x && this->particle->position.y == particle->position.y) {
+                particle->position = Vector2(particle->position.x + sim->epsilon_distribution(sim->gen), particle->position.y + sim->epsilon_distribution(sim->gen));
+            }
             create_children();
         }
         insert_into_child(particle, depth);
@@ -85,6 +90,8 @@ Vector2 TreeNode::calculate_force(Particle* origin, sm_float const opening_angle
         // if ((g.call(origin->position, cm) * charge).norm() / origin->mass > 10) {
         //     std::cout << g.call(origin->position, cm).norm() << ", " << charge << std::endl;
         // }
+        avg = (avg * avg_counter + g.call(origin->position, cm) * charge) / (avg_counter + 1);
+        avg_counter += 1;
         return g.call(origin->position, cm) * charge;
     }
     return {0, 0};

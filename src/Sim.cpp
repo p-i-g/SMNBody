@@ -10,7 +10,7 @@
 #include <iostream>
 
 
-Sim::Sim(const std::string& params_fname) {
+Sim::Sim(const std::string& params_fname) : gen{std::random_device{}()} {
     if (load_params(params_fname)) {
         std::cerr << "Failed to load parameters file: " << params_fname << std::endl;
         return;
@@ -32,6 +32,8 @@ Sim::Sim(const std::string& params_fname) {
     capillary_length = params["capillary_length"];
 
     g = GravityFunction(capillary_length);
+
+    epsilon_distribution = std::normal_distribution<sm_float>(0, particle_radius / 10);
 
     initialize_particles();
     load_force_interp(params["force_input_file"]);
@@ -91,10 +93,6 @@ Vector2 Sim::evaluate_force_interp(Vector2 const position) const {
 void Sim::initialize_particles() {
     particles = static_cast<Particle *>(malloc(number_of_particles * sizeof(Particle)));
 
-    // for random number generation. I really don't need std::random_device but wtv.
-    std::random_device rd;
-    std::mt19937 gen{rd()};
-
     std::uniform_real_distribution<> theta_distribution(0, 2 * std::numbers::pi);
     std::vector i{0, domain_size / 2};
     std::vector<sm_float> w{0, 1};
@@ -103,12 +101,12 @@ void Sim::initialize_particles() {
     for (int it = 0; it < number_of_particles; it++) {
         const sm_float r = r_distribution(gen);
         const sm_float theta = theta_distribution(gen);
-        particles[it] = Particle(Vector2(r * cos(theta), r * sin(theta)), particle_mass, particle_charge);
+        particles[it] = Particle(Vector2(r * cos(theta), r * sin(theta)), particle_mass, particle_charge, this);
     }
 }
 
 void Sim::one_step() {
-    root = new TreeNode(nullptr, domain_size, Vector2(0, 0));
+    root = new TreeNode(nullptr, domain_size, Vector2(0, 0), this);
     // add particles to the tree
     for (int i = 0; i < number_of_particles; i++) {
         root->insert_particle(&particles[i], 0);
@@ -116,20 +114,34 @@ void Sim::one_step() {
     for (int i = 0; i < number_of_particles; i++) {
         // auto inner_t0 = std::chrono::high_resolution_clock::now();
         Vector2 f = root->calculate_force(&particles[i], opening_angle, g, particle_radius);
+        f = particles[i].check_lock(f);
+        particles[i].clear_lock();
         // if (f.x > 10 || f.y > 10 || f.x < -10 || f.y < -10) {
         //     std::cout << f.x << ", " << f.y << std::endl;
         // }
         // auto inner_t1 = std::chrono::high_resolution_clock::now();
         // std::cout << "Force time: " << std::chrono::duration_cast<std::chrono::nanoseconds>(inner_t1 - inner_t0).count() << std::endl;
         // auto inner_t2 = std::chrono::high_resolution_clock::now();
-        f = f + evaluate_force_interp(particles[i].position); //  - particles[i].velocity * cd
         // if ((particles[i].velocity * cd).norm() > 1e-10) {
         //     std::cout << "Drag: " << (particles[i].velocity * cd).norm() << std::endl;
         // }
+        f = f + evaluate_force_interp(particles[i].position);
+        if (avg_f_initialized) {
+            avg_f = (avg_f * 0.99999 + evaluate_force_interp(particles[i].position) * 0.00001);
+        } else {
+            avg_f = evaluate_force_interp(particles[i].position);
+            avg_f_initialized = true;
+        }
         step_one_particle_terminal_velocity(&particles[i], f);
+        particles[i].cache_angles.clear();
+        // if (particles[i].current_node != nullptr) {
+        //     particles[i].current_node->resolve_collisions(&particles[i], particle_radius);
+        // }
+
         // std::cout << particles[i].current_node->center.x << ", " << particles[i].current_node->center.y << std::endl;
         // std::cout << "Timestep time: " << std::chrono::duration_cast<std::chrono::nanoseconds>(inner_t2 - inner_t1).count() << std::endl;
     }
+
     for (int i = 0; i < number_of_particles; i++) {
         if (particles[i].current_node != nullptr) {
             particles[i].current_node->resolve_collisions(&particles[i], particle_radius);
@@ -139,7 +151,7 @@ void Sim::one_step() {
     delete root;
 }
 
-void Sim::step_one_particle_euler(Particle *particle, Vector2 const force) const {
+void Sim::step_one_particle_euler(Particle *particle, Vector2 force) {
     // std::cout << particle->position.x << ", " << particle->position.y << std::endl;
     particle->position = particle->position + particle->velocity * timestep;
     // std::cout << particle->position.x << ", " << particle->position.y << std::endl;
@@ -154,10 +166,10 @@ void Sim::step_one_particle_terminal_velocity(Particle *particle, Vector2 const 
 
 void Sim::run() {
     int const total_steps = static_cast<int>(total_time / timestep);
-    // std::cout << total_steps << std::endl;
     for (int i = 0; i < total_steps; i++) {
-        // std::cout << "Step: " << i << std::endl;
+        std::cout << "Step: " << i << std::endl;
         one_step();
+        // std::cout << i << std::endl;
 
         if (i % save_interval == 0) {
             write_file();
@@ -166,10 +178,16 @@ void Sim::run() {
 }
 
 void Sim::write_file() const {
-    for (int i = 0; i < number_of_particles; i++) {
+    std::cout << avg_f.x << ", " << avg_f.y << std::endl;
+    // std::cout << "Before: " << hehe_before.x << ", " << hehe_before.y << std::endl;
+    // std::cout << "After: " << hehe_after.x << ", " << hehe_after.y << std::endl;
+    int i;
+    for (i = 0; i < number_of_particles; i++) {
         fwrite(&particles[i].position.x, sizeof(sm_float), 1, out_file);
         fwrite(&particles[i].position.y, sizeof(sm_float), 1, out_file);
     }
+    fflush(out_file);
+    std::cout << i << std::endl;
 }
 
 Sim::~Sim() {
