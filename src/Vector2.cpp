@@ -25,6 +25,6 @@ Vector2 Vector2::operator -(Vector2 const other) const {
 }
 
 sm_float Vector2::norm() const {
-    return sqrt(pow(x, 2) + pow(y, 2));
+    return sqrt(x * x + y * y);
 }
 

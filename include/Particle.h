@@ -26,7 +26,7 @@ public:
 
     Particle(Vector2 position, Vector2 velocity, sm_float mass, sm_float charge, Sim* sim);
     Particle(Vector2 position, sm_float mass, sm_float charge, Sim* sim);
-    void resolve_collision(Particle* other, sm_float particle_radius);
+    void resolve_collision(Particle* other, sm_float particle_radius, int* counters);
     void add_lock(sm_float start, sm_float end);
     void clear_lock();
     [[nodiscard]] Vector2 check_lock(Vector2 force) const;

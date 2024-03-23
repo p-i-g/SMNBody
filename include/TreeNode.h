@@ -30,14 +30,14 @@ class TreeNode {
 
     void insert_into_child(Particle* particle, int depth) const; // this sounds so wrong
     void create_children();
-    void resolve_collisions_downwards_recursion(Particle* particle, sm_float particle_radius) const;
+    void resolve_collisions_downwards_recursion(Particle* particle, sm_float particle_radius, int* counters) const;
 
 public:
     Vector2 center;
     TreeNode(TreeNode *parent, sm_float size, Vector2 center, Sim* sim);
     void insert_particle(Particle *particle, int depth);
     [[nodiscard]] Vector2 calculate_force(Particle* origin, sm_float opening_angle, GravityFunction& g, sm_float particle_radius) const;
-    void resolve_collisions(Particle* particle, sm_float particle_radius) const;
+    void resolve_collisions(Particle* particle, sm_float particle_radius, int* counters) const;
     ~TreeNode();
 };
 inline Vector2 avg = Vector2(0, 0);

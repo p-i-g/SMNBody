@@ -17,4 +17,6 @@ Vector2 GravityFunction::call(Vector2 const source, Vector2 const dest) const{
     // }
 
     return (dest - source) * std::cyl_bessel_k(1, norm / capillary_length) / norm;
+    // return (dest - source) * std::exp(-norm * norm / capillary_length / capillary_length) / norm;
+    // return Vector2(0, 0);
 }

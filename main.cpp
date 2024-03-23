@@ -1,3 +1,48 @@
+/*
+#include <iostream>
+#include <fstream>
+#include <vector>
+
+int main(int argc, char* argv[]) {
+    if (argc != 3) {
+        std::cerr << "Usage: " << argv[0] << " <input_file> <output_file>" << std::endl;
+        return 1;
+    }
+
+    const char* input_file = argv[1];
+    const char* output_file = argv[2];
+
+    // Open the input file for reading
+    std::ifstream input(input_file, std::ios::binary);
+    if (!input) {
+        std::cerr << "Failed to open input file: " << input_file << std::endl;
+        return 1;
+    }
+
+    // Open the output file for writing
+    std::ofstream output(output_file, std::ios::binary);
+    if (!output) {
+        std::cerr << "Failed to open output file: " << output_file << std::endl;
+        return 1;
+    }
+
+    // Read the input file and convert long doubles to doubles
+    long double input_value;
+    double output_value;
+    while (input.read(reinterpret_cast<char*>(&input_value), sizeof(input_value))) {
+        output_value = static_cast<double>(input_value);
+        output.write(reinterpret_cast<const char*>(&output_value), sizeof(output_value));
+    }
+
+    // Close the files
+    input.close();
+    output.close();
+
+    std::cout << "Conversion completed successfully." << std::endl;
+
+    return 0;
+}
+*/
 #include <iostream>
 
 #include "Sim.h"

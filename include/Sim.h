@@ -28,6 +28,7 @@ class Sim {
     sm_float timestep;
     sm_float total_time;
     sm_float force_interp_spacing;
+    int substeps;
     int save_interval;
     std::string out_file_name;
     sm_float capillary_length;
@@ -38,12 +39,15 @@ class Sim {
     Vector2 avg_f = Vector2(0, 0);
     bool avg_f_initialized = false;
 
+    int *counters;
+    std::vector<sm_float> avg = {};
+
     FILE* out_file;
 
     int load_params(const std::string& params_fname);
     void initialize_particles();
     void one_step();
-    void step_one_particle_euler(Particle* particle, Vector2 force);
+    void step_one_particle_euler(Particle* particle, Vector2 force) const;
     void step_one_particle_terminal_velocity(Particle* particle, Vector2 force) const;
     void write_file() const;
     void load_force_interp(const std::string& filename);

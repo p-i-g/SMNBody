@@ -86,7 +86,7 @@ Vector2 TreeNode::calculate_force(Particle* origin, sm_float const opening_angle
             bottom_left->calculate_force(origin, opening_angle, g, particle_radius) +
             bottom_right->calculate_force(origin, opening_angle, g, particle_radius);
     }
-    if (origin != particle && (origin->position - cm).norm() > particle_radius * 2.1) {
+    if (origin != particle && (origin->position - cm).norm() > particle_radius * 2) {
         // if ((g.call(origin->position, cm) * charge).norm() / origin->mass > 10) {
         //     std::cout << g.call(origin->position, cm).norm() << ", " << charge << std::endl;
         // }
@@ -97,7 +97,7 @@ Vector2 TreeNode::calculate_force(Particle* origin, sm_float const opening_angle
     return {0, 0};
 }
 
-void TreeNode::resolve_collisions(Particle* particle, sm_float const particle_radius) const { // NOLINT i know its recursive
+void TreeNode::resolve_collisions(Particle* particle, sm_float const particle_radius, int* counters) const { // NOLINT i know its recursive
     // traverse the tree upwards until we find a cell large enough such that there is no chance of collision with a particle outside this cell
     // ie boundary - particle.center > 2 * particle radius
     // std::cout << center.x << ", " << center.y << std::endl;
@@ -106,21 +106,21 @@ void TreeNode::resolve_collisions(Particle* particle, sm_float const particle_ra
          center.x + size / 2 < particle->position.x + particle_radius * 2 || center.x - size / 2 > particle->position.x - particle_radius * 2) &&
          parent != nullptr) {
         // recurse upwards
-        parent->resolve_collisions(particle, particle_radius);
+        parent->resolve_collisions(particle, particle_radius, counters);
     } else {
-        resolve_collisions_downwards_recursion(particle, particle_radius);
+        resolve_collisions_downwards_recursion(particle, particle_radius, counters);
     }
 }
 
-void TreeNode::resolve_collisions_downwards_recursion(Particle* particle, sm_float const particle_radius) const { // NOLINT i know its recursive
+void TreeNode::resolve_collisions_downwards_recursion(Particle* particle, sm_float const particle_radius, int* counters) const { // NOLINT i know its recursive
     if (has_children) {
-        top_left->resolve_collisions_downwards_recursion(particle, particle_radius);
-        bottom_left->resolve_collisions_downwards_recursion(particle, particle_radius);
-        top_right->resolve_collisions_downwards_recursion(particle, particle_radius);
-        bottom_right->resolve_collisions_downwards_recursion(particle, particle_radius);
+        top_left->resolve_collisions_downwards_recursion(particle, particle_radius, counters);
+        bottom_left->resolve_collisions_downwards_recursion(particle, particle_radius, counters);
+        top_right->resolve_collisions_downwards_recursion(particle, particle_radius, counters);
+        bottom_right->resolve_collisions_downwards_recursion(particle, particle_radius, counters);
     } else if (this->particle != nullptr && particle != this->particle &&
         (particle->position - this->particle->position).norm() < 2 * particle_radius) {
-        particle->resolve_collision(this->particle, particle_radius);
+        particle->resolve_collision(this->particle, particle_radius, counters);
     }
 }
 
